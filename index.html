@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Carrinho IOT">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Carrinho IOT — Controle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="cockpit">
+    <header class="header">
+      <div class="connection" aria-label="Conexão simulada no modo demonstração">
+        <span class="connection-dot"></span>
+        <div class="connection-copy"><strong>CONECTADO</strong><span>192.168.0.105</span></div>
+      </div>
+      <div class="brand"><svg class="brand-trace" viewBox="0 0 650 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 18H105Q120 18 130 28L158 51Q165 57 182 57H468Q485 57 492 51L520 28Q530 18 545 18H650"/></svg><div class="brand-plate"><h1>CARRINHO <span>IOT</span></h1></div></div>
+      <button class="fullscreen-button" id="fullscreen-button" type="button" aria-label="Entrar em tela cheia" title="Entrar em tela cheia" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="expand-icon" d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><path class="collapse-icon" d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5"/></svg>
+      </button>
+    </header>
+    <div id="fullscreen-hint" class="fullscreen-hint" role="status" hidden></div>
+    <section class="deck" aria-label="Painel de controle">
+      <div class="control-bay">
+        <div class="joystick" id="joystick" role="application" tabindex="0" aria-label="Joystick. Arraste para dirigir e solte para parar. Use também as setas do teclado." data-direction="parar">
+          <div class="dial-ticks"></div><div class="outer-rim"></div><div class="light-arcs"></div><div class="inner-rim"></div><div class="carbon-disc"></div>
+          <span class="direction-label front" data-highlight="frente">FRENTE</span><span class="direction-label rear" data-highlight="re">RÉ</span><span class="direction-label left" data-highlight="esquerda">ESQUERDA</span><span class="direction-label right" data-highlight="direita">DIREITA</span>
+          <svg class="arrow arrow-front" data-highlight="frente" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 21 20 4l17 17-5 1L20 10 8 22z"/></svg>
+          <svg class="arrow arrow-rear" data-highlight="re" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 21 20 4l17 17-5 1L20 10 8 22z"/></svg>
+          <svg class="arrow arrow-left" data-highlight="esquerda" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 21 20 4l17 17-5 1L20 10 8 22z"/></svg>
+          <svg class="arrow arrow-right" data-highlight="direita" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 21 20 4l17 17-5 1L20 10 8 22z"/></svg>
+          <div class="knob-socket"></div><div class="knob" id="knob"><div></div></div>
+        </div>
+        <div class="movement-plate"><i></i><output id="movement" aria-live="polite">PARADO</output><i></i></div>
+      </div>
+      <div class="reserved-panel" aria-hidden="true"><div class="floor-grid"></div><div class="lower-trace"></div></div>
+    </section>
+    <footer class="edge-details"><span>ESP32 / CONTROLE</span></footer>
+  </main>
+</body>
+</html>

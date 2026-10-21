@@ -1,0 +1,4 @@
+preview*.jpg
+node_modules/
+dist/
+*.log
