@@ -7,78 +7,137 @@ const char* ssid = "iot2";
 const char* senha = "SUA_SENHA_WIFI";
 
 WebServer servidor(80);
-const int IN1 = 25, IN2 = 26, IN3 = 27, IN4 = 32;
-const int pino_led_r1 = 22, pino_led_g1 = 23, pino_led_b1 = 18;
-const int pino_led_r2 = 19, pino_led_g2 = 21, pino_led_b2 = 33;
+const int IN1 = 25;
+const int IN2 = 26;
+const int IN3 = 27;
+const int IN4 = 32;
+const int pino_led_r1 = 22;
+const int pino_led_g1 = 23;
+const int pino_led_b1 = 18;
+const int pino_led_r2 = 19;
+const int pino_led_g2 = 21;
+const int pino_led_b2 = 33;
 const int pinoLDR = 34;
 const int limiteLuz = 300;
 int valorLuz = 0;
-unsigned long ultimaLeitura = 0;
-unsigned long ultimoComandoWeb = 0;
-const unsigned long timeoutWeb = 1200;
-bool movimentoWeb = false;
 
 void parar() {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
-  movimentoWeb = false;
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
 void frente() {
-  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
 }
 void re() {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
 }
 void virarDireita() {
-  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
 void virarEsquerda() {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
 }
+void ligarFarol() {
+  digitalWrite(pino_led_r1, HIGH);
+  digitalWrite(pino_led_g1, HIGH);
+  digitalWrite(pino_led_b1, HIGH);
+  digitalWrite(pino_led_r2, HIGH);
+  digitalWrite(pino_led_g2, HIGH);
+  digitalWrite(pino_led_b2, HIGH);
+}
+
+void desligarFarol() {
+  digitalWrite(pino_led_r1, LOW);
+  digitalWrite(pino_led_g1, LOW);
+  digitalWrite(pino_led_b1, LOW);
+  digitalWrite(pino_led_r2, LOW);
+  digitalWrite(pino_led_g2, LOW);
+  digitalWrite(pino_led_b2, LOW);
+}
+
 void verificarLuz() {
   valorLuz = analogRead(pinoLDR);
-  int nivel = valorLuz < limiteLuz ? HIGH : LOW;
-  digitalWrite(pino_led_r1, nivel); digitalWrite(pino_led_g1, nivel);
-  digitalWrite(pino_led_b1, nivel); digitalWrite(pino_led_r2, nivel);
-  digitalWrite(pino_led_g2, nivel); digitalWrite(pino_led_b2, nivel);
+  if (valorLuz < limiteLuz) {
+    ligarFarol();
+  } else {
+    desligarFarol();
+  }
 }
+
 void receberComando() {
   String acao = servidor.arg("acao");
-  bool valido = acao == "frente" || acao == "re" || acao == "direita"
-    || acao == "esquerda" || acao == "parar";
-  if (!valido) {
-    parar();
-    servidor.send(400, "text/plain", "Acao invalida");
-    return;
-  }
-  if (acao == "frente") frente();
-  else if (acao == "re") re();
-  else if (acao == "direita") virarDireita();
-  else if (acao == "esquerda") virarEsquerda();
-  else parar();
 
-  // O controle físico original continua usando seus comandos de apertar/soltar.
-  // A página envia origem=web e renova o movimento a cada 250 ms.
-  movimentoWeb = acao != "parar" && servidor.arg("origem") == "web";
-  ultimoComandoWeb = millis();
+  if (acao == "frente") {
+    frente();
+  } else if (acao == "re") {
+    re();
+  } else if (acao == "direita") {
+    virarDireita();
+  } else if (acao == "esquerda") {
+    virarEsquerda();
+  } else {
+    parar();
+  }
+
   servidor.sendHeader("Cache-Control", "no-store");
   servidor.send(200, "text/plain", "OK");
 }
+
+void abrirPagina() {
+  servidor.sendHeader("Cache-Control", "no-store");
+  servidor.send_P(200, "text/html; charset=utf-8", INDEX_HTML);
+}
+
+void enviarEstilo() {
+  servidor.send_P(200, "text/css; charset=utf-8", STYLES_CSS);
+}
+
+void enviarJavascript() {
+  servidor.sendHeader("Cache-Control", "no-store");
+  servidor.send_P(200, "application/javascript; charset=utf-8", APP_JS);
+}
+
+void enviarManifesto() {
+  servidor.send_P(200, "application/manifest+json", MANIFEST_JSON);
+}
+
+void verificarConexao() {
+  servidor.sendHeader("Cache-Control", "no-store");
+  servidor.send(200, "application/json", "{\"conectado\":true}");
+}
+
 void setup() {
   Serial.begin(9600);
-  const int saidas[] = {IN1, IN2, IN3, IN4, pino_led_r1, pino_led_g1,
-    pino_led_b1, pino_led_r2, pino_led_g2, pino_led_b2};
-  for (int pino : saidas) pinMode(pino, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  pinMode(pino_led_r1, OUTPUT);
+  pinMode(pino_led_g1, OUTPUT);
+  pinMode(pino_led_b1, OUTPUT);
+  pinMode(pino_led_r2, OUTPUT);
+  pinMode(pino_led_g2, OUTPUT);
+  pinMode(pino_led_b2, OUTPUT);
+
   pinMode(pinoLDR, INPUT);
   parar();
   verificarLuz();
 
-  WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(true);
   WiFi.begin(ssid, senha);
   Serial.print("Conectando ao Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -86,40 +145,31 @@ void setup() {
     Serial.print(".");
   }
   Serial.println();
-  Serial.print("Abra o painel em http://");
+  Serial.println("Wi-Fi conectado!");
+  Serial.print("Abra no navegador: http://");
   Serial.println(WiFi.localIP());
 
-  servidor.on("/", HTTP_GET, []() {
-    servidor.sendHeader("Cache-Control", "no-store");
-    servidor.send_P(200, "text/html; charset=utf-8", INDEX_HTML);
-  });
-  servidor.on("/styles.css", HTTP_GET, []() {
-    servidor.send_P(200, "text/css; charset=utf-8", STYLES_CSS);
-  });
-  servidor.on("/app.js", HTTP_GET, []() {
-    servidor.sendHeader("Cache-Control", "no-store");
-    servidor.send_P(200, "application/javascript; charset=utf-8", APP_JS);
-  });
-  servidor.on("/manifest.webmanifest", HTTP_GET, []() {
-    servidor.send_P(200, "application/manifest+json", MANIFEST_JSON);
-  });
-  servidor.on("/status", HTTP_GET, []() {
-    servidor.sendHeader("Cache-Control", "no-store");
-    servidor.send(200, "application/json", "{\"conectado\":true}");
-  });
+  servidor.on("/", HTTP_GET, abrirPagina);
+  servidor.on("/styles.css", HTTP_GET, enviarEstilo);
+  servidor.on("/app.js", HTTP_GET, enviarJavascript);
+  servidor.on("/manifest.webmanifest", HTTP_GET, enviarManifesto);
+  servidor.on("/status", HTTP_GET, verificarConexao);
   servidor.on("/comando", HTTP_GET, receberComando);
-  servidor.onNotFound([]() { servidor.send(404, "text/plain", "Nao encontrado"); });
   servidor.begin();
-  Serial.println("Servidor iniciado. Motores parados.");
+  Serial.println("Servidor HTTP iniciado.");
+  Serial.println("Carrinho pronto!");
 }
 void loop() {
-  if (WiFi.status() != WL_CONNECTED
-      || (movimentoWeb && millis() - ultimoComandoWeb >= timeoutWeb)) {
+  // PARA SE O ESP32 PERDER O WIFI
+  if (WiFi.status() != WL_CONNECTED) {
     parar();
   }
+
+  // RECEBE OS COMANDOS
   servidor.handleClient();
-  if (millis() - ultimaLeitura >= 250) {
-    ultimaLeitura = millis();
-    verificarLuz();
-  }
+
+  // CONTROLA OS FAROIS
+  verificarLuz();
+
+  delay(50);
 }
