@@ -15,11 +15,11 @@ O painel servido pelo próprio ESP32 usa a mesma origem e acompanha o IP atribu�
 
 ## Comandos e parada
 
-A página envia `GET /comando?acao=...&origem=web`. Enquanto há movimento, renova o comando a cada 250 ms. Ao soltar, perder foco ou ocultar a página, tenta enviar `parar`. O firmware para movimentos iniciados pela página após 1200 ms sem renovação e também para ao perder o Wi-Fi. A fila da página mantém só o comando pendente mais recente.
+A página envia `GET /comando?acao=...`, com as ações frente, re, direita, esquerda e parar. Envia ao mudar a direção e tenta enviar parar ao soltar, perder foco ou ocultar a página. Mantém apenas o comando pendente mais recente.
 
-O timeout de renovação se aplica aos comandos com `origem=web`. O controle físico enviado pelo usuário só transmite ao apertar/soltar e mantém esse comportamento; não possui a mesma proteção contra perda de seu comando de soltar. Use apenas um controle por vez.
+O firmware usa funções simples, if/else e delay(50), sem millis(). Não há parada por tempo sem comandos. Se apenas o celular perder comunicação e o comando parar não chegar, os motores podem continuar em movimento. A perda do Wi-Fi do próprio carrinho provoca parada. Faça testes com as rodas suspensas e use apenas um controle por vez.
 
-O firmware atende `/status` com HTTP 200 para o indicador de conexão. Mantém os pinos da ponte H (25, 26, 27, 32), os dois LEDs RGB e o LDR no pino 34, com limite 300. A leitura de luz ocorre a cada 250 ms sem bloquear o atendimento HTTP. O teste automático que movimentava o carrinho ao ligar foi removido. As rotinas de pisca que só eram usadas nesse teste não são executadas.
+A rota /status responde para o indicador de conexão. Os pinos da ponte H são 25, 26, 27 e 32; os LEDs RGB e o LDR no pino 34 seguem o código original, com limite de luz 300. A leitura do sensor ocorre no loop. O teste que movimentava o carrinho automaticamente ao ligar foi removido.
 
 ## Atualizar o painel embutido
 
@@ -29,14 +29,22 @@ Depois de editar os arquivos web da raiz, execute:
 python3 scripts/embed_web.py
 ```
 
-Grave novamente o firmware para atualizar o painel no ESP32. O GitHub Pages e o firmware usam a mesma versão de JavaScript, mas o Pages mantém como destino alternativo `http://192.168.10.103`; CORS, HTTPS e permissões de rede local podem impedir seu uso.
+Grave novamente o firmware para atualizar o painel no ESP32. O GitHub Pages e o firmware usam a mesma versão de JavaScript, mas o Pages mantém como destino alternativo `http://192.168.10.108`; CORS, HTTPS e permissões de rede local podem impedir seu uso.
 
 ## Interface
 
 Joystick por mouse, toque ou setas do teclado quando focado. Solte para parar. Botão de tela cheia nos navegadores compatíveis. No iPhone, o modo de tela inicial depende do Safari. Fontes externas têm fallback local; não é necessário internet para os comandos quando o painel é servido pelo ESP32.
 
+## Diagnóstico de acesso
+
+O último IP informado pelo Monitor Serial foi `192.168.10.108`, mas o roteador pode atribuir outro endereço depois. O painel servido pelo ESP32 usa o IP da própria página.
+
+Se o navegador mostrar ERR_CONNECTION_TIMED_OUT, teste no Chrome/Safari de um celular ou PC conectado à rede iot2. Um navegador remoto ou integrado pode não ter acesso à rede local. Tente primeiro `http://192.168.10.108/status`, sem enviar comandos de motor. Se não responder, confira o IP atual no Monitor Serial, a alimentação e a conexão à rede. Redes de convidados ou com isolamento entre aparelhos também podem impedir o acesso.
+
+Atualizar o GitHub não altera o código já gravado na placa. Para usar novos arquivos embutidos, baixe carrinho.ino e web_assets.h, preencha a senha localmente e grave novamente.
+
 ## Validação
 
-Sintaxe JavaScript e testes com HTTP simulado verificaram as cinco ações, renovação de movimento, parada ao soltar, endereço IP dinâmico e descarte de comandos antigos na fila. Os arquivos embutidos foram regenerados pelo script.
+A sintaxe JavaScript e o envio das cinco ações foram verificados com HTTP simulado. Também foram conferidos o IP local 192.168.10.108, o envio de parar e a igualdade entre os arquivos web e suas cópias no header.
 
-Não houve compilação com o core Arduino ESP32 nem gravação/teste de hardware neste ambiente. A primeira validação no hardware deve ser feita com as rodas suspensas.
+Não houve compilação com o core Arduino ESP32 nem gravação ou teste físico neste ambiente. O log enviado pelo usuário confirma que sua placa conectou ao Wi-Fi e iniciou o servidor; o acesso ao painel e os motores ainda precisam de teste local.
