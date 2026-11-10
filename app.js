@@ -1,13 +1,14 @@
 'use strict';
 
-// Dados do header são ilustrativos nesta primeira etapa.
-const DEMO_MODE = true;
-const ESP32_BASE_URL = ''; // Vazio: mesmo servidor. Ou: http://192.168.0.105
+// Protocolo HTTP compatível com o controle físico.
+const DEMO_MODE = false;
+const ESP32_BASE_URL = location.hostname === '192.168.10.103' ? '' : 'http://192.168.10.103';
 const joystick = document.querySelector('#joystick');
 const knob = document.querySelector('#knob');
 const movement = document.querySelector('#movement');
 const connection = document.querySelector('.connection');
 const connectionText = document.querySelector('.connection-copy strong');
+document.querySelector('.connection-copy span').textContent = '192.168.10.103';
 
 function setConnectionStatus(connected) {
   connection.classList.toggle('disconnected', !connected);
@@ -29,6 +30,7 @@ async function checkConnection() {
 }
 window.addEventListener('online', checkConnection);
 window.addEventListener('offline', () => setConnectionStatus(false));
+setConnectionStatus(false);
 checkConnection();
 if (!DEMO_MODE) setInterval(checkConnection, 5000);
 const labels = { parar: 'PARADO', frente: 'FRENTE', re: 'RÉ', direita: 'DIREITA', esquerda: 'ESQUERDA' };
@@ -45,7 +47,7 @@ function sendCommand(command) {
   // Ordem serial evita que um comando anterior chegue depois de /parar.
   requestQueue = requestQueue.then(async () => {
     try {
-      const response = await fetch(`${ESP32_BASE_URL}/${command}`, {
+      const response = await fetch(`${ESP32_BASE_URL}/comando?acao=${encodeURIComponent(command)}`, {
         cache: 'no-store', signal: AbortSignal.timeout(1500),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
