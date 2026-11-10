@@ -2,13 +2,13 @@
 
 // Protocolo HTTP compatível com o controle físico.
 const DEMO_MODE = false;
-const ESP32_BASE_URL = location.hostname === '192.168.10.103' ? '' : 'http://192.168.10.103';
+const ESP32_BASE_URL = location.protocol === 'http:' && /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname) ? '' : 'http://192.168.10.103';
 const joystick = document.querySelector('#joystick');
 const knob = document.querySelector('#knob');
 const movement = document.querySelector('#movement');
 const connection = document.querySelector('.connection');
 const connectionText = document.querySelector('.connection-copy strong');
-document.querySelector('.connection-copy span').textContent = '192.168.10.103';
+document.querySelector('.connection-copy span').textContent = ESP32_BASE_URL ? new URL(ESP32_BASE_URL).hostname : location.hostname;
 
 function setConnectionStatus(connected) {
   connection.classList.toggle('disconnected', !connected);
@@ -20,7 +20,7 @@ async function checkConnection() {
   if (!navigator.onLine) return setConnectionStatus(false);
   if (DEMO_MODE) return setConnectionStatus(true);
   try {
-    const response = await fetch(`${ESP32_BASE_URL}/`, {
+    const response = await fetch(`${ESP32_BASE_URL}/status`, {
       cache: 'no-store', signal: AbortSignal.timeout(2000),
     });
     setConnectionStatus(response.ok);
@@ -36,28 +36,46 @@ if (!DEMO_MODE) setInterval(checkConnection, 5000);
 const labels = { parar: 'PARADO', frente: 'FRENTE', re: 'RÉ', direita: 'DIREITA', esquerda: 'ESQUERDA' };
 let currentCommand = 'parar';
 let activePointer = null;
-let requestQueue = Promise.resolve();
+let commandInFlight = false;
+let pendingCommand = null;
 let pressedKeys = [];
 
-function sendCommand(command) {
+async function sendCommand(command) {
   if (DEMO_MODE) {
     console.log('[DEMO]', command);
     return;
   }
-  // Ordem serial evita que um comando anterior chegue depois de /parar.
-  requestQueue = requestQueue.then(async () => {
-    try {
-      const response = await fetch(`${ESP32_BASE_URL}/comando?acao=${encodeURIComponent(command)}`, {
-        cache: 'no-store', signal: AbortSignal.timeout(1500),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      setConnectionStatus(true);
-    } catch (error) {
-      setConnectionStatus(false);
-      console.error('Falha ao enviar comando ao ESP32:', command, error);
+  // Uma requisição por vez; só guarda o comando mais recente.
+  pendingCommand = command;
+  if (commandInFlight) return;
+  commandInFlight = true;
+  try {
+    while (pendingCommand !== null) {
+      const next = pendingCommand;
+      pendingCommand = null;
+      try {
+        const response = await fetch(`${ESP32_BASE_URL}/comando?acao=${encodeURIComponent(next)}&origem=web`, {
+          cache: 'no-store', signal: AbortSignal.timeout(800),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setConnectionStatus(true);
+      } catch (error) {
+        setConnectionStatus(false);
+        console.error('Falha ao enviar comando ao ESP32:', next, error);
+        // Interrompe a interação e tenta enviar parar uma vez.
+        if (next !== 'parar') stop();
+      }
     }
-  });
+  } finally {
+    commandInFlight = false;
+  }
 }
+
+// Renova o comando enquanto o joystick está pressionado.
+// O firmware interrompe o movimento web após 1200 ms sem renovação.
+if (!DEMO_MODE) setInterval(() => {
+  if (currentCommand !== 'parar') sendCommand(currentCommand);
+}, 250);
 
 function setDirection(command) {
   if (command === currentCommand) return;
