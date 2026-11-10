@@ -26,7 +26,7 @@ const char INDEX_HTML[] PROGMEM = R"CARRINHO(<!doctype html>
     <header class="header">
       <div class="connection disconnected" aria-label="Desconectado — ESP32">
         <span class="connection-dot"></span>
-        <div class="connection-copy"><strong>DESCONECTADO</strong><span>192.168.10.103</span></div>
+        <div class="connection-copy"><strong>DESCONECTADO</strong><span>192.168.10.108</span></div>
       </div>
       <div class="brand"><svg class="brand-trace" viewBox="0 0 650 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 18H105Q120 18 130 28L158 51Q165 57 182 57H468Q485 57 492 51L520 28Q530 18 545 18H650"/></svg><div class="brand-plate"><h1>CARRINHO <span>IOT</span></h1></div></div>
       <button class="fullscreen-button" id="fullscreen-button" type="button" aria-label="Entrar em tela cheia" title="Entrar em tela cheia" aria-pressed="false">
@@ -103,7 +103,7 @@ const char APP_JS[] PROGMEM = R"CARRINHO('use strict';
 
 // Protocolo HTTP compatível com o controle físico.
 const DEMO_MODE = false;
-const ESP32_BASE_URL = location.protocol === 'http:' && /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname) ? '' : 'http://192.168.10.103';
+const ESP32_BASE_URL = location.protocol === 'http:' && /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname) ? '' : 'http://192.168.10.108';
 const joystick = document.querySelector('#joystick');
 const knob = document.querySelector('#knob');
 const movement = document.querySelector('#movement');
@@ -155,7 +155,7 @@ async function sendCommand(command) {
       const next = pendingCommand;
       pendingCommand = null;
       try {
-        const response = await fetch(`${ESP32_BASE_URL}/comando?acao=${encodeURIComponent(next)}&origem=web`, {
+        const response = await fetch(`${ESP32_BASE_URL}/comando?acao=${encodeURIComponent(next)}`, {
           cache: 'no-store', signal: AbortSignal.timeout(800),
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -171,12 +171,6 @@ async function sendCommand(command) {
     commandInFlight = false;
   }
 }
-
-// Renova o comando enquanto o joystick está pressionado.
-// O firmware interrompe o movimento web após 1200 ms sem renovação.
-if (!DEMO_MODE) setInterval(() => {
-  if (currentCommand !== 'parar') sendCommand(currentCommand);
-}, 250);
 
 function setDirection(command) {
   if (command === currentCommand) return;
