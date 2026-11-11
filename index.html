@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+<!-- HTML: estrutura e conteúdo. O visual está em styles.css e o controle em app.js. -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -18,6 +19,7 @@
 </head>
 <body>
   <main class="cockpit">
+    <!-- Cabeçalho: conexão, nome do projeto e tela cheia. -->
     <header class="header">
       <div class="connection disconnected" aria-label="Desconectado — ESP32">
         <span class="connection-dot"></span>
@@ -30,6 +32,7 @@
     </header>
     <div id="fullscreen-hint" class="fullscreen-hint" role="status" hidden></div>
     <section class="deck" aria-label="Painel de controle">
+      <!-- Camadas desenham o joystick; o JavaScript move apenas o knob central. -->
       <div class="control-bay">
         <div class="joystick" id="joystick" role="application" tabindex="0" aria-label="Joystick. Arraste para dirigir e solte para parar. Use também as setas do teclado." data-direction="parar">
           <div class="dial-ticks"></div><div class="outer-rim"></div><div class="light-arcs"></div><div class="inner-rim"></div><div class="carbon-disc"></div>
@@ -42,6 +45,7 @@
         </div>
         <div class="movement-plate"><i></i><output id="movement" aria-live="polite">PARADO</output><i></i></div>
       </div>
+      <!-- Espaço reservado para informações futuras, sem comandos de motor. -->
       <div class="reserved-panel" aria-hidden="true"><div class="floor-grid"></div><div class="lower-trace"></div></div>
     </section>
     <footer class="edge-details"><span>ESP32 / CONTROLE</span></footer>

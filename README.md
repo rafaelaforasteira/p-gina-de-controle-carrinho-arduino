@@ -1,5 +1,7 @@
 # Carrinho IOT
 
+Para estudar o código e preparar a explicação em aula, leia [o roteiro de apresentação](APRESENTACAO.md). Os arquivos originais agora têm comentários em português; a decisão de direção do joystick usa `if/else`, mantendo a lógica anterior.
+
 Painel HTML/CSS/JavaScript e firmware ESP32 integrados. O controle físico original continua compatível com `GET /comando?acao=frente|re|direita|esquerda|parar`.
 
 ## Gravar e abrir o painel
